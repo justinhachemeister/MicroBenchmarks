@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System;
+using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnostics.Windows;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
-using MicroBenchmarks.NServiceBus;
-using Microsoft.Azure.Amqp;
 
 namespace MicroBenchmarks.ASB
 {
@@ -25,12 +20,16 @@ namespace MicroBenchmarks.ASB
             {
                 Add(MarkdownExporter.GitHub);
                 Add(new MemoryDiagnoser());
-                //Add(Job.Default.With(Mode.SingleRun).With(Platform.X64).WithLaunchCount(1).WithWarmupCount(1).WithTargetCount(1));
-                Add(Job.Default.With(Mode.SingleRun).With(Platform.X86).WithLaunchCount(1).WithWarmupCount(1).WithTargetCount(1));
+                Add(Job.Default.With(Platform.X64));
+                Add(Job.Default.With(Platform.X86));
             }
         }
-        [Params(1, 2, 4, 8, 64, 128)]
+
+        [Params(1, 2, 4, 8, 16, 32, 64, 128)]
         public int Messages { get; set; }
+
+        [Params(1, 100, 1000, 10000)]
+        public int Calls { get; set; }
 
         [Setup]
         public void SetUp()
@@ -54,16 +53,27 @@ namespace MicroBenchmarks.ASB
         }
 
         [Benchmark(Baseline = true)]
-        public AmqpMessage ConverterBeforeOptimizations()
+        public void ConverterBeforeOptimizations()
         {
-            return AmqpMessageConverterBefore.AmqpMessageConverter.BrokeredMessagesToAmqpMessage(messagesBefore, false);
+            for (int i = 0; i < Calls; i++)
+            {
+                var message =
+                    AmqpMessageConverterBefore.AmqpMessageConverter.BrokeredMessagesToAmqpMessage(messagesBefore, false);
+
+                GC.KeepAlive(message);
+            }
         }
 
-        [Benchmark()]
-        public AmqpMessage ConverterAfterOptimizations()
+        [Benchmark]
+        public void ConverterAfterOptimizations()
         {
-            return AmqpMessageConverterAfter.AmqpMessageConverter.BrokeredMessagesToAmqpMessage(messagesAfter, false);
+            for (int i = 0; i < Calls; i++)
+            {
+                var message =
+                    AmqpMessageConverterAfter.AmqpMessageConverter.BrokeredMessagesToAmqpMessage(messagesAfter, false);
+
+                GC.KeepAlive(message);
+            }
         }
     }
-
 }
