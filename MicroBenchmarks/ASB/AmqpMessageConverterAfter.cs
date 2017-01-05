@@ -106,33 +106,32 @@ namespace MicroBenchmarks.ASB
                 AmqpMessage previous = null, current = null;
                 BrokeredMessage firstBrokeredMessage = null;
                 List<Data> dataList = null;
-                int messageCount = 0;
                 foreach (var brokeredMessage in brokeredMessages)
                 {
+                    previous = current;
+
                     if (firstBrokeredMessage == null)
                     {
                         firstBrokeredMessage = brokeredMessage;
                     }
 
-                    current = AmqpMessageConverter.ClientGetMessage(brokeredMessage);
+                    current = ClientGetMessage(brokeredMessage);
 
-                    if (previous != null && previous != current)
+                    if (previous == null)
                     {
-                        if (dataList == null)
-                        {
-                            dataList = new List<Data> { ToData(previous) };
-                        }
-
-                        dataList.Add(ToData(current));
+                        continue;
                     }
 
-                    previous = current;
-                    messageCount++;
+                    if (dataList == null)
+                    {
+                        dataList = new List<Data> { ToData(previous) };
+                    }
+
+                    dataList.Add(ToData(current));
                 }
 
-                if (messageCount == 1)
+                if (previous == null && current != null)
                 {
-                    // ReSharper disable once PossibleNullReferenceException
                     current.Batchable = batchable;
                     return current;
                 }
