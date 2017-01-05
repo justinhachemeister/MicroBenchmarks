@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnostics.Windows;
+using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
 
@@ -19,7 +20,7 @@ namespace MicroBenchmarks.ASB
             public Config()
             {
                 Add(MarkdownExporter.GitHub);
-                Add(new MemoryDiagnoser());
+                Add(new BenchmarkDotNet.Diagnosers.MemoryDiagnoser());
                 Add(Job.Default.With(Platform.X64));
                 Add(Job.Default.With(Platform.X86));
             }
