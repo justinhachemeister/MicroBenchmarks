@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnostics.Windows;
+using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
@@ -21,12 +23,12 @@ namespace MicroBenchmarks.ASB
             {
                 Add(MarkdownExporter.GitHub);
                 Add(new BenchmarkDotNet.Diagnosers.MemoryDiagnoser());
-                Add(Job.Default.With(Platform.X64));
-                Add(Job.Default.With(Platform.X86));
+                Add(Job.Default.With(Platform.X64).WithInvocationCount(16).WithTargetCount(1).WithWarmupCount(1));
+                Add(Job.Default.With(Platform.X86).WithInvocationCount(16).WithTargetCount(1).WithWarmupCount(1));
             }
         }
 
-        [Params(1, 2, 4, 8, 16, 32, 64, 128)]
+        [Params(1, 2, 4, 8)]
         public int Messages { get; set; }
 
         [Params(1, 100, 1000, 10000)]
@@ -38,13 +40,13 @@ namespace MicroBenchmarks.ASB
             messagesBefore = new List<AmqpMessageConverterBefore.BrokeredMessage>(Messages);
             for (int i = 0; i < Messages; i++)
             {
-                messagesBefore.Add(new AmqpMessageConverterBefore.BrokeredMessage(new SomeMessage { MyProperty = i }));
+                messagesBefore.Add(new AmqpMessageConverterBefore.BrokeredMessage(new SomeMessage { MyProperty = i }, new MemoryStream()));
             }
 
             messagesAfter = new List<AmqpMessageConverterAfter.BrokeredMessage>(Messages);
             for (int i = 0; i < Messages; i++)
             {
-                messagesAfter.Add(new AmqpMessageConverterAfter.BrokeredMessage(new SomeMessage { MyProperty = i }));
+                messagesAfter.Add(new AmqpMessageConverterAfter.BrokeredMessage(new SomeMessage { MyProperty = i }, new MemoryStream()));
             }
         }
 

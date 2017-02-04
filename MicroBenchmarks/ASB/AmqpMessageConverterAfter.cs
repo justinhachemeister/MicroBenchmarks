@@ -101,7 +101,7 @@ namespace MicroBenchmarks.ASB
             public const string DateTimeOffsetName = AmqpConstants.Vendor + ":datetime-offset";
             const int GuidSize = 16;
 
-            public static AmqpMessage BrokeredMessagesToAmqpMessage(IEnumerable<BrokeredMessage> brokeredMessages, bool batchable)
+            public static AmqpMessage BrokeredMessagesToAmqpMessage(List<BrokeredMessage> brokeredMessages, bool batchable)
             {
                 AmqpMessage previous = null, current = null;
                 BrokeredMessage firstBrokeredMessage = null;
@@ -117,17 +117,15 @@ namespace MicroBenchmarks.ASB
 
                     current = ClientGetMessage(brokeredMessage);
 
-                    if (previous == null)
+                    if (previous != null)
                     {
-                        continue;
-                    }
+                        if (dataList == null)
+                        {
+                            dataList = new List<Data> { ToData(previous) };
+                        }
 
-                    if (dataList == null)
-                    {
-                        dataList = new List<Data> { ToData(previous) };
-                    }
-
-                    dataList.Add(ToData(current));
+                        dataList.Add(ToData(current));
+                    }                    
                 }
 
                 if (previous == null && current != null)
